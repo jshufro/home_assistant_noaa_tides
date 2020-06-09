@@ -1,0 +1,7 @@
+{
+  "domain": "noaa_tides",
+  "name": "NOAA Tides",
+  "documentation": "",
+  "requirements": ["noaa_coops"],
+  "codeowners": []
+}
