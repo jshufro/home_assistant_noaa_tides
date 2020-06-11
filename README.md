@@ -52,6 +52,15 @@ Sample template sensor:
             value_template: "{{ state_attr('sensor.water_temp', 'air_temperature') }}"
 
 ```
+
+Note that the tide curve requires `sensor.internet_time` to be updated correctly. Use the `time_date` sensor platform like this:
+
+``` yaml
+  - platform: time_date
+    display_options:
+      - 'beat'
+```
+
 I'm also using the [custom mini-graph card](https://github.com/kalkih/mini-graph-card) with the following lovelace configuration:
 ``` yaml
           - entities:
