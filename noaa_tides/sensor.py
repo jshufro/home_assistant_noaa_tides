@@ -1,6 +1,8 @@
 """Support for the NOAA Tides and Currents API."""
 from datetime import datetime, timedelta
+from datetime import timezone as tz
 import logging
+import requests
 import math
 from typing import Optional
 
@@ -27,12 +29,13 @@ CONF_STATION_ID = "station_id"
 CONF_STATION_TYPE = "type"
 
 DEFAULT_ATTRIBUTION = "Data provided by NOAA"
+BUOY_ATTRIBUTION = "Data provided by NDBC"
 DEFAULT_NAME = "NOAA Tides"
 DEFAULT_TIMEZONE = "lst_ldt"
 
 TIMEZONES = ["gmt", "lst", "lst_ldt"]
 UNIT_SYSTEMS = ["english", "metric"]
-STATION_TYPES = ["tides", "temp"]
+STATION_TYPES = ["tides", "temp", "buoy"]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -61,8 +64,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if station_type == "tides":
         noaa_sensor = NOAATidesAndCurrentsSensor(name, station_id, timezone, unit_system)
-    else:
+    elif station_type == "temp":
         noaa_sensor = NOAATemperatureSensor(name, station_id, timezone, unit_system)
+    else:
+        noaa_sensor = NOAABuoySensor(name, station_id, timezone, unit_system)
 
     noaa_sensor.update()
     if noaa_sensor.data is None:
@@ -240,3 +245,99 @@ class NOAATemperatureSensor(Entity):
             _LOGGER.error("Check NOAA Tides and Currents: %s", err.args)
             self.data = None
 
+class NOAABuoySensor(Entity):
+    """Representation of a NOAA Buoy."""
+    FMT_URI="https://www.ndbc.noaa.gov/data/realtime2/%s.txt"
+
+    def __init__(self, name, station_id, timezone, unit_system):
+        """Initialize the sensor."""
+        self._name = name
+        self._station_url = self.FMT_URI % station_id
+        self._timezone = timezone
+        self._unit_system = unit_system
+        self.data = None
+        self.attr = None
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
+    @property
+    def device_class(self) -> Optional[str]:
+        return DEVICE_CLASS_TEMPERATURE
+
+    @property
+    def unit_of_measurement(self):
+        return TEMP_CELSIUS if self._unit_system == "metric" else TEMP_FAHRENHEIT
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of this device."""
+        if self.attr is None:
+            self.attr = {ATTR_ATTRIBUTION: BUOY_ATTRIBUTION}
+        if self.data is None:
+            return attr
+
+        data_time = datetime(self.data["YY"][1], self.data["MM"][1], self.data["DD"][1],
+                hour=self.data["hh"][1], minute=self.data["mm"][1], tzinfo=tz.utc)
+        for k in self.data:
+            if k in ("YY", "MM", "DD", "hh", "mm"):
+                continue
+            if self.data[k][1] == "MM":
+                # continue here lets us retain the old values when there are no data availabile
+                continue
+
+            if self._timezone == "gmt":
+                self.attr[k + "_time"] = data_time.strftime("%Y-%m-%dT%H:%M")
+            else:
+                self.attr[k + "_time"] = data_time.replace(tzinfo=tz.utc).astimezone(tz=None).strftime("%Y-%m-%dT%H:%M")
+
+            if self._unit_system == "english" and self.data[k][0] == "degC":
+                self.attr[k + "_unit"] = "degF"
+                self.attr[k] = round((self.data[k][1] * 9 / 5) + 32, 1)
+            else:
+                self.attr[k + "_unit"] = self.data[k][0]
+                self.attr[k] = self.data[k][1]
+
+        return self.attr
+
+    @property
+    def state(self):
+        """Return the state of the device."""
+        if self.data is None:
+            return None
+        if self.data["WTMP"] is None:
+            return None
+        if self.data["WTMP"][1] == "MM":
+            return None
+        if self._unit_system == "metric":
+            return self.data["WTMP"][1]
+        return round((self.data["WTMP"][1] * 9 / 5) + 32, 1)
+
+    def update(self):
+        """Get the latest data from NOAA Buoy API."""
+        r = requests.get(self._station_url)
+        if r.status_code is not requests.codes.ok:
+            _LOGGER.error("Received HTTP code %i from %s query", (r.status_code, self._station_url))
+            return
+        # r.text is new-line separated with #-prefixed headers for data type and unit.
+        # since temperature is always celsius, if unit_system is english, convert.
+
+        lines = r.text.splitlines()
+        if len(lines) < 3:
+            _LOGGER.error("Received fewer than 3 lines of data, which shouldn't happen: %s" % r.text)
+
+        if self.data == None:
+            self.data = {}
+
+        fields = lines[0].strip("#").split()
+        units = lines[1].strip("#").split()
+        values = lines[2].split() # latest values are at the top of the file, thankfully.
+        for i in range(len(fields)):
+            if values[i] == "MM":
+                self.data[fields[i]] = (units[i], values[i])
+            elif "." in values[i]:
+                self.data[fields[i]] = (units[i], float(values[i]))
+            else:
+                self.data[fields[i]] = (units[i], int(values[i]))
