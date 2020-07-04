@@ -23,6 +23,12 @@ sensor:
     type: temp            # This station will be used to measure water temperature
     name: water_temp
     scan_interval: 360
+
+  - platform: noaa_tides
+    name: buoy
+    type: buoy            # This station will be used for off-shore Buoy data
+    station_id: 44017     # A buoy ID from https://www.ndbc.noaa.gov/
+    scan_interval: 360
 ```
 
 Different stations support different features (products/datums), so use the [station finder](https://tidesandcurrents.noaa.gov/) to select the right station for `tides` vs `temp` types.
