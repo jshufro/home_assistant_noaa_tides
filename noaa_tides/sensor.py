@@ -138,10 +138,6 @@ class NOAATidesAndCurrentsSensor(Entity):
                 last_tide_time = most_recent.strftime("%-I:%M %p")
                 return f"{next_tide} tide at {tide_time}"
 
-    @property
-    def device_class(self) -> Optional[str]:
-        return DEVICE_CLASS_TIMESTAMP
-
     def update(self):
         """Get the latest data from NOAA Tides and Currents API."""
 
