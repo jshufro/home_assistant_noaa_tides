@@ -71,8 +71,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     noaa_sensor.update()
     if noaa_sensor.data is None:
-        _LOGGER.error("Unable to setup NOAA Tides Sensor")
-        return
+        _LOGGER.error("First call to NOAA data API failed. Configuration may be wrong.")
     add_entities([noaa_sensor], True)
 
 class NOAATidesAndCurrentsSensor(Entity):
@@ -85,62 +84,74 @@ class NOAATidesAndCurrentsSensor(Entity):
         self._timezone = timezone
         self._unit_system = unit_system
         self.data = None
+        self.attr = None
 
     @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
 
+    def update_tide_factor_from_attr(self):
+        if self.attr is None:
+            return
+        if ("last_tide_time" not in self.attr or
+            "next_tide_time" not in self.attr or
+            "next_tide_type" not in self.attr):
+            return
+        now = datetime.now()
+        most_recent = datetime.strptime(self.attr["last_tide_time"], "%I:%M %p")
+        next_tide_time = datetime.strptime(self.attr["next_tide_time"], "%I:%M %p")
+        predicted_period = (next_tide_time - most_recent).seconds
+        if self.attr["next_tide_type"] is "High":
+            self.attr["tide_factor"] = 50 - (50*math.cos((now - most_recent).seconds * math.pi / predicted_period))
+        else:
+            self.attr["tide_factor"] = 50 + (50*math.cos((now - most_recent).seconds * math.pi / predicted_period))
+
     @property
     def device_state_attributes(self):
         """Return the state attributes of this device."""
-        attr = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        if self.attr is None:
+            self.attr = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         if self.data is None:
-            return attr
-        tide_text = None
+            self.update_tide_factor_from_attr()
+            return self.attr
+
         now = datetime.now()
+        tide_text = None
         most_recent = None
         for index, row in self.data.iterrows():
             if most_recent == None or (index <= now and index > most_recent):
                 most_recent = index
             elif index > now:
-                attr["next_tide_time"] = index.strftime("%-I:%M %p")
-                attr["last_tide_time"] = most_recent.strftime("%-I:%M %p")
+                self.attr["next_tide_time"] = index.strftime("%-I:%M %p")
+                self.attr["last_tide_time"] = most_recent.strftime("%-I:%M %p")
                 tide_factor = 0
                 predicted_period = (index - most_recent).seconds
                 if row.hi_lo == "H":
-                    attr["next_tide_type"] = "High"
-                    attr["last_tide_type"] = "Low"
-                    attr["high_tide_level"] = row.predicted_wl
-                    attr["tide_factor"] = 50 - (50*math.cos((now - most_recent).seconds * math.pi / predicted_period))
-                if row.hi_lo == "L":
-                    attr["next_tide_type"] = "Low"
-                    attr["last_tide_type"] = "High"
-                    attr["low_tide_level"] = row.predicted_wl
-                    attr["tide_factor"] = 50 + (50*math.cos((now - most_recent).seconds * math.pi / predicted_period))
-                return attr
-        return attr
+                    self.attr["next_tide_type"] = "High"
+                    self.attr["last_tide_type"] = "Low"
+                    self.attr["high_tide_level"] = row.predicted_wl
+                elif row.hi_lo == "L":
+                    self.attr["next_tide_type"] = "Low"
+                    self.attr["last_tide_type"] = "High"
+                    self.attr["low_tide_level"] = row.predicted_wl
+                self.update_tide_factor_from_attr()
+                return self.attr
+        return self.attr
 
     @property
     def state(self):
         """Return the state of the device."""
         if self.data is None:
             return None
-        tide_text = None
         now = datetime.now()
-        most_recent = None
         for index, row in self.data.iterrows():
-            if most_recent == None or (index <= now and index > most_recent):
-                most_recent = index
             if index > now:
                 if row.hi_lo == "H":
                     next_tide = "High"
-                    last_tide = "Low"
                 if row.hi_lo == "L":
                     next_tide = "Low"
-                    last_tide = "High"
                 tide_time = index.strftime("%-I:%M %p")
-                last_tide_time = most_recent.strftime("%-I:%M %p")
                 return f"{next_tide} tide at {tide_time}"
 
     def update(self):
@@ -180,6 +191,7 @@ class NOAATemperatureSensor(Entity):
         self._timezone = timezone
         self._unit_system = unit_system
         self.data = None
+        self.attr = None
 
     @property
     def name(self):
@@ -189,15 +201,16 @@ class NOAATemperatureSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of this device."""
-        attr = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        if self.attr is None:
+            self.attr = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         if self.data is None:
-            return attr
+            return self.attr
 
-        attr["temperature"] = self.data[0].water_temp[0]
-        attr["air_temperature"] = self.data[1].air_temp[0]
-        attr["temperature_time"] = self.data[0].index[0].strftime("%Y-%m-%dT%H:%M")
-        attr["air_temperature_time"] = self.data[1].index[0].strftime("%Y-%m-%dT%H:%M")
-        return attr
+        self.attr["temperature"] = self.data[0].water_temp[0]
+        self.attr["air_temperature"] = self.data[1].air_temp[0]
+        self.attr["temperature_time"] = self.data[0].index[0].strftime("%Y-%m-%dT%H:%M")
+        self.attr["air_temperature_time"] = self.data[1].index[0].strftime("%Y-%m-%dT%H:%M")
+        return self.attr
 
     @property
     def state(self):
