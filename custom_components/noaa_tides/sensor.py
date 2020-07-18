@@ -332,7 +332,7 @@ class NOAABuoySensor(Entity):
         """Get the latest data from NOAA Buoy API."""
         r = requests.get(self._station_url)
         if r.status_code is not requests.codes.ok:
-            _LOGGER.error(f"Received HTTP code #{r.status_code} from #{self._station_url} query")
+            _LOGGER.error(f"Received HTTP code {r.status_code} from {self._station_url} query")
             return
         # r.text is new-line separated with #-prefixed headers for data type and unit.
         # since temperature is always celsius, if unit_system is english, convert.
