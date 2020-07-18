@@ -290,7 +290,7 @@ class NOAABuoySensor(Entity):
         if self.attr is None:
             self.attr = {ATTR_ATTRIBUTION: BUOY_ATTRIBUTION}
         if self.data is None:
-            return attr
+            return self.attr
 
         data_time = datetime(self.data["YY"][1], self.data["MM"][1], self.data["DD"][1],
                 hour=self.data["hh"][1], minute=self.data["mm"][1], tzinfo=tz.utc)
