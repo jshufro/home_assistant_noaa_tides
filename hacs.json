@@ -1,0 +1,5 @@
+{
+  "name": "NOAA Tides and Currents Sensor",
+  "domains": ["sensor"],
+  "render_readme": true
+}
