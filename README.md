@@ -67,53 +67,60 @@ Note that the tide curve requires `sensor.internet_time` to be updated correctly
       - 'beat'
 ```
 
-I'm also using the [custom mini-graph card](https://github.com/kalkih/mini-graph-card) with the following lovelace configuration:
-``` yaml
-          - entities:
-              - color: '#02ace5'
-                entity: sensor.beach_air_temp
-                name: Air
-                show_state: true
-                state_adaptive_color: true
-              - color: darkblue
-                entity: sensor.water_temp
-                name: Water
-                show_state: true
-                state_adaptive_color: true
-            hours_to_show: 24
-            name: Air and Water Temperatures
-            points_per_hour: 12
-            show:
-              fill: false
-            type: 'custom:mini-graph-card'
-            unit: °F
-          - entities:
-              - entity: sensor.next_tide
-              - entity: sensor.last_tide
-            footer:
-              entities:
-                - sensor.water_level
-              hours_to_show: 12
-              icon: 'mdi:swim'
-              line_color: darkblue
-              lower_bound: 0
-              points_per_hour: 60
-              show:
-                labels: false
-              type: 'custom:mini-graph-card'
-              upper_bound: 100
-            title: Tides
-            type: entities
-```
 
-Which looks like this:
+### Lovelace
 
 ![Lovelace Configuration](/noaa_tides_lovelace.png)
 
+These cards can be created using the [custom mini-graph card](https://github.com/kalkih/mini-graph-card) with the following lovelace configuration:
+
+```yaml
+entities:
+  - color: '#02ace5'
+    entity: sensor.beach_air_temp
+    name: Air
+    show_state: true
+    state_adaptive_color: true
+  - color: darkblue
+    entity: sensor.ocean_temp
+    name: Water
+    show_state: true
+    state_adaptive_color: true
+hours_to_show: 24
+name: Air and Water Temperatures
+points_per_hour: 12
+show:
+  fill: false
+type: 'custom:mini-graph-card'
+unit: °F
+```
+
+```yaml
+entities:
+  - entity: sensor.next_tide
+  - entity: sensor.last_tide
+footer:
+  entities:
+    - sensor.ocean_water_level
+  hours_to_show: 12
+  icon: 'mdi:swim'
+  line_color: darkblue
+  lower_bound: 0
+  points_per_hour: 60
+  show:
+    labels: false
+  type: 'custom:mini-graph-card'
+  upper_bound: 100
+title: Tides
+type: entities
+```
+
 ## Contributing
+
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
 Please make sure to update tests as appropriate.
 
 ## License
+
 [MIT](https://choosealicense.com/licenses/mit/)
