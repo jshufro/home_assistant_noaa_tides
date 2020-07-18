@@ -110,6 +110,10 @@ Which looks like this:
 
 ![Lovelace Configuration](/noaa_tides_lovelace.png)
 
+## Support
+
+For setup and other support questions, see the [Home Assistant community discussion for this add-on](https://community.home-assistant.io/t/i-made-an-improved-noaa-tides-sensor-for-my-familys-summer-house/203466).
+
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
