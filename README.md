@@ -14,20 +14,21 @@ This library is a [fork of the core component](https://www.home-assistant.io/int
 sensor:
   - platform: noaa_tides
     name: tides           # Useful when more than one sensor is used. Otherwise a name is generated.
-    station_id: 8512354   # A station ID from https://tidesandcurrents.noaa.gov/
     type: tides           # This station will be used to measure water level
-    scan_interval: 360    # Polling interval for the NOAA API
+    station_id: 8512354   # A station ID from https://tidesandcurrents.noaa.gov/
+    scan_interval: 360    # polling interval for the NOAA API
 
   - platform: noaa_tides
-    station_id: 8510560
-    type: temp            # This station will be used to measure water temperature
-    name: water_temp
+    entity_id: sensor.ocean_temp
+    name: "Ocean temperature"
+    type: temp
+    station_id: 8510560   # station used to measure water temperature
     scan_interval: 360
 
   - platform: noaa_tides
     name: buoy
-    type: buoy            # This station will be used for off-shore Buoy data
-    station_id: 44017     # A buoy ID from https://www.ndbc.noaa.gov/
+    type: buoy
+    station_id: 44017     # station used for off-shore buoy data (buoy ID from https://www.ndbc.noaa.gov/)
     scan_interval: 360
 ```
 
