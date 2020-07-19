@@ -52,25 +52,30 @@ Sample template sensor:
 ``` yaml
 - platform: template
   sensors:
-        next_tide:
-            friendly_name: "Next tide"
-            entity_id: sensor.tides
-            value_template: "{{ state_attr('sensor.tides', 'next_tide_type') }} tide at {{ state_attr('sensor.tides', 'next_tide_time') }}"
-            icon_template: "{% if is_state_attr('sensor.tides', 'next_tide_type', 'High') %}mdi:waves{% else %}mdi:wave{% endif %}"
-        last_tide:
-            friendly_name: "Last tide"
-            entity_id: sensor.tides
-            value_template: "{{ state_attr('sensor.tides', 'last_tide_type') }} tide at {{ state_attr('sensor.tides', 'last_tide_time') }}"
-            icon_template: "{% if is_state_attr('sensor.tides', 'last_tide_type', 'High') %}mdi:waves{% else %}mdi:wave{% endif %}"
-        water_level:
-            friendly_name: "Water level"
-            entity_id: sensor.internet_time
-            value_template: "{{ state_attr('sensor.tides', 'tide_factor') }}"
-            unit_of_measurement: '%'
-        beach_air_temp:
-            friendly_name: "Air temperature"
-            entity_id: sensor.water_temp
-            value_template: "{{ state_attr('sensor.water_temp', 'air_temperature') }}"
+    next_tide:
+      friendly_name: Next tide
+      entity_id: sensor.tides
+      value_template: >-
+        {{ state_attr('sensor.tides', 'next_tide_type') }} tide at {{ state_attr('sensor.tides', 'next_tide_time') }}
+      icon_template: >-
+        {% if is_state_attr('sensor.tides', 'next_tide_type', 'High') %}mdi:waves{% else %}mdi:wave{% endif %}
+    last_tide:
+      friendly_name: Last tide
+      entity_id: sensor.tides
+      value_template: >-
+        {{ state_attr('sensor.tides', 'last_tide_type') }} tide at {{ state_attr('sensor.tides', 'last_tide_time') }}
+      icon_template: >-
+        {% if is_state_attr('sensor.tides', 'last_tide_type', 'High') %}mdi:waves{% else %}mdi:wave{% endif %}
+    water_level:
+      friendly_name: Water level
+      entity_id: sensor.internet_time
+      value_template: '{{ state_attr(''sensor.tides'', ''tide_factor'') }}'
+      unit_of_measurement: '%'
+    beach_air_temp:
+      friendly_name: Air temperature
+      entity_id: sensor.water_temp
+      value_template: '{{ state_attr(''sensor.water_temp'', ''air_temperature'') }}'
+
 ```
 
 **Note:** The tide curve requires `sensor.internet_time` to be updated correctly. Use the `time_date` sensor platform like this:
@@ -85,7 +90,7 @@ Sample template sensor:
 
 ![Lovelace Configuration](/noaa_tides_lovelace.png)
 
-These cards can be created using the [custom mini-graph card](https://github.com/kalkih/mini-graph-card) with the following lovelace configuration:
+These cards are created using the [custom mini-graph card](https://github.com/kalkih/mini-graph-card) with the following Lovelace configuration:
 
 ```yaml
 entities:
