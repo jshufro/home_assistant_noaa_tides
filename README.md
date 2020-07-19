@@ -2,13 +2,24 @@
 
 This library is a [fork of the core component](https://www.home-assistant.io/integrations/noaa_tides/) which adds some additional features and migrates the backend from the now-defunct [py_noaa](https://github.com/GClunies/py_noaa) to the superseding [noaa_coops](https://github.com/GClunies/noaa_coops).
 
+![beta_badge](https://img.shields.io/badge/maturity-Beta-yellow.png)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 ## Installation
 
+#### Using HACS (Home Assistant Community Store)
+
+Make sure that [Home Assistant Community Store (HACS)](https://github.com/custom-components/hacs) is setup, then add the "Integration" repository: `jshufro/home_assistant_noaa_tides`
+
+#### Manual
+
 1. Clone the repository.
-2. Copy the `noaa_tides` directory into `<home assistant directory>/custom_components/`
+2. Copy the `custom_components/noaa_tides` directory into `<home assistant directory>/custom_components/`
 3. Configure a sensor in configuration.yaml
 
-## Sample configuration
+## Configuration
+
+#### Example
 
 ``` yaml
 sensor:
@@ -34,10 +45,13 @@ sensor:
 
 Different stations support different features (products/datums), so use the [station finder](https://tidesandcurrents.noaa.gov/) to select the right station for `tides` vs `temp` types.
 
-For complex lovelace widgets, it is suggested to use the [template platform](https://www.home-assistant.io/integrations/template/).
+For complex [lovelace](https://www.home-assistant.io/lovelace/) widgets, it is suggested to use the [template platform](https://www.home-assistant.io/integrations/template/).
 
 Sample template sensor:
+
 ``` yaml
+- platform: template
+  sensors:
         next_tide:
             friendly_name: "Next tide"
             entity_id: sensor.tides
@@ -57,17 +71,15 @@ Sample template sensor:
             friendly_name: "Air temperature"
             entity_id: sensor.water_temp
             value_template: "{{ state_attr('sensor.water_temp', 'air_temperature') }}"
-
 ```
 
-Note that the tide curve requires `sensor.internet_time` to be updated correctly. Use the `time_date` sensor platform like this:
+**Note:** The tide curve requires `sensor.internet_time` to be updated correctly. Use the `time_date` sensor platform like this:
 
 ``` yaml
   - platform: time_date
     display_options:
       - 'beat'
 ```
-
 
 ### Lovelace
 
