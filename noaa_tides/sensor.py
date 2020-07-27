@@ -171,13 +171,13 @@ class NOAATidesAndCurrentsSensor(Entity):
                 time_zone=self._timezone,
             )
             self.data = df_predictions
-            _LOGGER.debug("Data = %s", self.data)
+            _LOGGER.debug(f"Data = {self.data}")
             _LOGGER.debug(
                 "Recent Tide data queried with start time set to %s",
                 begin.strftime("%m-%d-%Y %H:%M"),
             )
         except ValueError as err:
-            _LOGGER.error("Check NOAA Tides and Currents: %s", err.args)
+            _LOGGER.error(f"Check NOAA Tides and Currents: {err.args}")
             self.data = None
 
 
@@ -249,13 +249,13 @@ class NOAATemperatureSensor(Entity):
                 time_zone=self._timezone,
             )
             self.data = (temps.tail(1), air_temps.tail(1))
-            _LOGGER.debug("Data = %s", self.data)
+            _LOGGER.debug(f"Data = {self.data}")
             _LOGGER.debug(
                 "Recent temperature data queried with start time set to %s",
                 begin.strftime("%m-%d-%Y %H:%M"),
             )
         except ValueError as err:
-            _LOGGER.error("Check NOAA Tides and Currents: %s", err.args)
+            _LOGGER.error(f"Check NOAA Tides and Currents: {err.args}")
             self.data = None
 
 class NOAABuoySensor(Entity):
@@ -332,14 +332,14 @@ class NOAABuoySensor(Entity):
         """Get the latest data from NOAA Buoy API."""
         r = requests.get(self._station_url)
         if r.status_code is not requests.codes.ok:
-            _LOGGER.error("Received HTTP code %i from %s query", (r.status_code, self._station_url))
+            _LOGGER.error(f"Received HTTP code {r.status_code} from {self._station_url} query")
             return
         # r.text is new-line separated with #-prefixed headers for data type and unit.
         # since temperature is always celsius, if unit_system is english, convert.
 
         lines = r.text.splitlines()
         if len(lines) < 3:
-            _LOGGER.error("Received fewer than 3 lines of data, which shouldn't happen: %s" % r.text)
+            _LOGGER.error(f"Received fewer than 3 lines of data, which shouldn't happen: {r.text}")
 
         if self.data == None:
             self.data = {}
