@@ -113,7 +113,6 @@ class NOAATidesAndCurrentsSensor(Entity):
         if self.attr is None:
             self.attr = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         if self.data is None:
-            self.update_tide_factor_from_attr()
             return self.attr
 
         now = datetime.now()
@@ -178,8 +177,8 @@ class NOAATidesAndCurrentsSensor(Entity):
             )
         except ValueError as err:
             _LOGGER.error(f"Check NOAA Tides and Currents: {err.args}")
-            self.data = None
-
+        except ConnectionError as err:
+            _LOGGER.error(f"Couldn't connect to NOAA Ties and Currents API: {err}")
 
 class NOAATemperatureSensor(Entity):
     """Representation of a NOAA Temperature sensor."""
