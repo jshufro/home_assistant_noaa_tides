@@ -67,13 +67,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     if station_type == "tides":
         noaa_sensor = NOAATidesAndCurrentsSensor(name, station_id, timezone, unit_system)
-        await hass.async_add_executor_job(noaa_sensor.noaa_coops_update)
     elif station_type == "temp":
         noaa_sensor = NOAATemperatureSensor(name, station_id, timezone, unit_system)
-        await hass.async_add_executor_job(noaa_sensor.noaa_coops_update)
     else:
         noaa_sensor = NOAABuoySensor(name, station_id, timezone, unit_system)
-        await hass.async_add_executor_job(noaa_sensor.buoy_query)
 
     async_add_entities([noaa_sensor], True)
 
