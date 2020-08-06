@@ -6,7 +6,7 @@ import requests
 import math
 from typing import Optional
 
-import noaa_coops as nc
+from . import noaa_coops as nc
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA

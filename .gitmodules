@@ -1,0 +1,3 @@
+[submodule "noaa_tides/.submodules/noaa_coops"]
+	path = noaa_tides/.submodules/noaa_coops
+	url = https://github.com/jshufro/noaa_coops.git
