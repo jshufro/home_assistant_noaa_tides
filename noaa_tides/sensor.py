@@ -220,10 +220,12 @@ class NOAATemperatureSensor(NOAATidesAndCurrentsSensor):
         if self.data is None:
             return self.attr
 
-        self.attr["temperature"] = self.data[0].water_temp[0]
-        self.attr["air_temperature"] = self.data[1].air_temp[0]
-        self.attr["temperature_time"] = self.data[0].index[0].strftime("%Y-%m-%dT%H:%M")
-        self.attr["air_temperature_time"] = self.data[1].index[0].strftime("%Y-%m-%dT%H:%M")
+        if self.data[0] is not None:
+            self.attr["temperature"] = self.data[0].water_temp[0]
+            self.attr["temperature_time"] = self.data[0].index[0].strftime("%Y-%m-%dT%H:%M")
+        if self.data[1] is not None:
+            self.attr["air_temperature"] = self.data[1].air_temp[0]
+            self.attr["air_temperature_time"] = self.data[1].index[0].strftime("%Y-%m-%dT%H:%M")
         return self.attr
 
     @property
@@ -231,6 +233,9 @@ class NOAATemperatureSensor(NOAATidesAndCurrentsSensor):
         """Return the state of the device."""
         if self.data is None:
             return None
+        if self.data[0] is None:
+            # If there is no water temperature use the air temperature
+            return self.data[1].air_temp[0]
         return self.data[0].water_temp[0]
 
     @property
@@ -255,6 +260,8 @@ class NOAATemperatureSensor(NOAATidesAndCurrentsSensor):
         end = datetime.now()
         delta = timedelta(minutes=60)
         begin = end - delta
+        temps = None
+        air_temps = None
         try:
             temps = stn.get_data(
                 begin_date=begin.strftime("%Y%m%d %H:%M"),
@@ -262,26 +269,37 @@ class NOAATemperatureSensor(NOAATidesAndCurrentsSensor):
                 product="water_temperature",
                 units=self._unit_system,
                 time_zone=self._timezone,
+            ).tail(1)
+            _LOGGER.debug(
+                "Recent water temperature data queried with start time set to %s",
+                begin.strftime("%m-%d-%Y %H:%M"),
             )
+        except ValueError as err:
+            _LOGGER.error(f"Check NOAA Tides and Currents: {err.args}")
+        except requests.exceptions.ConnectionError as err:
+            _LOGGER.error(f"Couldn't connect to NOAA Ties and Currents API: {err}")
+
+        try:
             air_temps = stn.get_data(
                 begin_date=begin.strftime("%Y%m%d %H:%M"),
                 end_date=end.strftime("%Y%m%d %H:%M"),
                 product="air_temperature",
                 units=self._unit_system,
                 time_zone=self._timezone,
-            )
-            self.data = (temps.tail(1), air_temps.tail(1))
-            _LOGGER.debug(f"Data = {self.data}")
+            ).tail(1)
             _LOGGER.debug(
                 "Recent temperature data queried with start time set to %s",
                 begin.strftime("%m-%d-%Y %H:%M"),
             )
         except ValueError as err:
-            self.data = None
             _LOGGER.error(f"Check NOAA Tides and Currents: {err.args}")
         except requests.exceptions.ConnectionError as err:
-            self.data = None
             _LOGGER.error(f"Couldn't connect to NOAA Ties and Currents API: {err}")
+        if temps is None and air_temps is None:
+            self.data = None
+        else:
+            self.data = (temps, air_temps)
+        _LOGGER.debug(f"Data = {self.data}")
 
     async def async_update(self):
         """Get the latest data from NOAA Tides and Currents API."""
