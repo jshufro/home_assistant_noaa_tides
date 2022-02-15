@@ -28,8 +28,8 @@ _LOGGER = logging.getLogger(__name__)
 CONF_STATION_ID = "station_id"
 CONF_STATION_TYPE = "type"
 
-DEFAULT_ATTRIBUTION = "Data provided by NOAA"
-BUOY_ATTRIBUTION = "Data provided by NDBC"
+DEFAULT_ATTRIBUTION = "Data by NOAA"
+BUOY_ATTRIBUTION = "Data by NDBC"
 DEFAULT_NAME = "NOAA Tides"
 DEFAULT_TIMEZONE = "lst_ldt"
 
@@ -108,7 +108,7 @@ class NOAATidesAndCurrentsSensor(Entity):
             self.attr["tide_factor"] = 50 + (50*math.cos((now - most_recent).seconds * math.pi / predicted_period))
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of this device."""
         if self.attr is None:
             self.attr = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
@@ -199,7 +199,7 @@ class NOAATemperatureSensor(Entity):
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of this device."""
         if self.attr is None:
             self.attr = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
@@ -285,7 +285,7 @@ class NOAABuoySensor(Entity):
         return TEMP_CELSIUS if self._unit_system == "metric" else TEMP_FAHRENHEIT
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of this device."""
         if self.attr is None:
             self.attr = {ATTR_ATTRIBUTION: BUOY_ATTRIBUTION}
