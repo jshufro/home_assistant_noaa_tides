@@ -113,8 +113,8 @@ class NOAATidesAndCurrentsSensor(Entity):
             self.attr["tide_factor"] = 50 + (50*math.cos((now - most_recent).seconds * math.pi / predicted_period))
 
     @property
-    def device_state_attributes(self):
-        _LOGGER.debug("device_state_attributes queried")
+    def extra_state_attributes(self):
+        _LOGGER.debug("extra_state_attributes queried")
         """Return the state attributes of this device."""
         if self.attr is None:
             self.attr = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
@@ -213,7 +213,7 @@ class NOAATemperatureSensor(NOAATidesAndCurrentsSensor):
     """Representation of a NOAA Temperature sensor."""
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of this device."""
         if self.attr is None:
             self.attr = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
@@ -333,7 +333,7 @@ class NOAABuoySensor(Entity):
         return TEMP_CELSIUS if self._unit_system == "metric" else TEMP_FAHRENHEIT
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of this device."""
         if self.attr is None:
             self.attr = {ATTR_ATTRIBUTION: BUOY_ATTRIBUTION}
