@@ -1,7 +1,8 @@
 {
+  "version": "0.1.3",
   "domain": "noaa_tides",
   "name": "NOAA Tides",
   "documentation": "",
-  "requirements": ["noaa_coops"],
+  "requirements": ["noaa_coops>=0.1.8"],
   "codeowners": []
 }
