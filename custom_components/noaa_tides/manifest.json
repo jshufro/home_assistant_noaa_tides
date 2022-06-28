@@ -2,7 +2,7 @@
   "version": "0.1.4",
   "domain": "noaa_tides",
   "name": "NOAA Tides and Currents",
-  "codeowners": [ '@jshufro' ],
+  "codeowners": [ "@jshufro" ],
   "documentation": "https://github.com/jshufro/home_assistant_noaa_tides",
   "issue_tracker": "https://github.com/jshufro/home_assistant_noaa_tides/issues",
   "requirements": ["noaa_coops>=0.1.9"],
