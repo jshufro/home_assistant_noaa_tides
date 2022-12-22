@@ -1,14 +1,14 @@
 """Support for the NOAA Tides and Currents API."""
+import logging
+import math
 from datetime import datetime, timedelta
 from datetime import timezone as tz
-import logging
-import requests
-import math
 from typing import Optional
 
+import homeassistant.helpers.config_validation as cv
 import noaa_coops as nc
+import requests
 import voluptuous as vol
-
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -18,9 +18,8 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
     TEMP_CELSIUS,
-    TEMP_FAHRENHEIT
+    TEMP_FAHRENHEIT,
 )
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,11 +42,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_STATION_TYPE): vol.In(STATION_TYPES),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_TIME_ZONE, default=DEFAULT_TIMEZONE): vol.In(TIMEZONES),
-        vol.Optional(CONF_UNIT_SYSTEM): vol.In(UNIT_SYSTEMS)
+        vol.Optional(CONF_UNIT_SYSTEM): vol.In(UNIT_SYSTEMS),
     }
 )
 
 ghass = None
+
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the NOAA Tides and Currents sensor."""
@@ -66,7 +66,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         unit_system = UNIT_SYSTEMS[0]
 
     if station_type == "tides":
-        noaa_sensor = NOAATidesAndCurrentsSensor(name, station_id, timezone, unit_system)
+        noaa_sensor = NOAATidesAndCurrentsSensor(
+            name, station_id, timezone, unit_system
+        )
         await hass.async_add_executor_job(noaa_sensor.noaa_coops_update)
     elif station_type == "temp":
         noaa_sensor = NOAATemperatureSensor(name, station_id, timezone, unit_system)
@@ -76,6 +78,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         await hass.async_add_executor_job(noaa_sensor.buoy_query)
 
     async_add_entities([noaa_sensor], True)
+
 
 class NOAATidesAndCurrentsSensor(Entity):
     """Representation of a NOAA Tides and Currents sensor."""
@@ -99,18 +102,24 @@ class NOAATidesAndCurrentsSensor(Entity):
         _LOGGER.debug("Updating sine fit for tide factor")
         if self.attr is None:
             return
-        if ("last_tide_time" not in self.attr or
-            "next_tide_time" not in self.attr or
-            "next_tide_type" not in self.attr):
+        if (
+            "last_tide_time" not in self.attr
+            or "next_tide_time" not in self.attr
+            or "next_tide_type" not in self.attr
+        ):
             return
         now = datetime.now()
         most_recent = datetime.strptime(self.attr["last_tide_time"], "%I:%M %p")
         next_tide_time = datetime.strptime(self.attr["next_tide_time"], "%I:%M %p")
         predicted_period = (next_tide_time - most_recent).seconds
         if self.attr["next_tide_type"] == "High":
-            self.attr["tide_factor"] = 50 - (50*math.cos((now - most_recent).seconds * math.pi / predicted_period))
+            self.attr["tide_factor"] = 50 - (
+                50 * math.cos((now - most_recent).seconds * math.pi / predicted_period)
+            )
         else:
-            self.attr["tide_factor"] = 50 + (50*math.cos((now - most_recent).seconds * math.pi / predicted_period))
+            self.attr["tide_factor"] = 50 + (
+                50 * math.cos((now - most_recent).seconds * math.pi / predicted_period)
+            )
 
     @property
     def extra_state_attributes(self):
@@ -167,12 +176,14 @@ class NOAATidesAndCurrentsSensor(Entity):
             try:
                 self._station = nc.Station(self._station_id)
             except requests.exceptions.ConnectionError as err:
-                _LOGGER.error(f"Couldn't create a NOAA station object. Will retry next update. Error: {err}")
+                _LOGGER.error(
+                    f"Couldn't create a NOAA station object. Will retry next update. Error: {err}"
+                )
                 self._station = None
                 return
 
         begin = datetime.now() - timedelta(hours=24)
-        begin_date=begin.strftime("%Y%m%d %H:%M")
+        begin_date = begin.strftime("%Y%m%d %H:%M")
         end = begin + timedelta(hours=48)
         end_date = end.strftime("%Y%m%d %H:%M")
         try:
@@ -205,9 +216,12 @@ class NOAATidesAndCurrentsSensor(Entity):
             min_ts = datetime.now() + timedelta(hours=3)
             for index, row in self.data.iterrows():
                 if index > min_ts:
-                    _LOGGER.debug("Data exist with a tide in at most 3 hours, not querying NOAA.")
+                    _LOGGER.debug(
+                        "Data exist with a tide in at most 3 hours, not querying NOAA."
+                    )
                     return
         ghass.async_add_executor_job(self.noaa_coops_update)
+
 
 class NOAATemperatureSensor(NOAATidesAndCurrentsSensor):
     """Representation of a NOAA Temperature sensor."""
@@ -227,10 +241,14 @@ class NOAATemperatureSensor(NOAATidesAndCurrentsSensor):
 
         if self.data[0] is not None:
             self.attr["temperature"] = self.data[0].water_temp[0]
-            self.attr["temperature_time"] = self.data[0].index[0].strftime("%Y-%m-%dT%H:%M")
+            self.attr["temperature_time"] = (
+                self.data[0].index[0].strftime("%Y-%m-%dT%H:%M")
+            )
         if self.data[1] is not None:
             self.attr["air_temperature"] = self.data[1].air_temp[0]
-            self.attr["air_temperature_time"] = self.data[1].index[0].strftime("%Y-%m-%dT%H:%M")
+            self.attr["air_temperature_time"] = (
+                self.data[1].index[0].strftime("%Y-%m-%dT%H:%M")
+            )
         return self.attr
 
     @property
@@ -257,7 +275,9 @@ class NOAATemperatureSensor(NOAATidesAndCurrentsSensor):
             try:
                 self._station = nc.Station(self._station_id)
             except requests.exceptions.ConnectionError as err:
-                _LOGGER.error(f"Couldn't create a NOAA station object. Will retry next update. Error: {err}")
+                _LOGGER.error(
+                    f"Couldn't create a NOAA station object. Will retry next update. Error: {err}"
+                )
                 self._station = None
                 return
 
@@ -313,7 +333,8 @@ class NOAATemperatureSensor(NOAATidesAndCurrentsSensor):
 
 class NOAABuoySensor(Entity):
     """Representation of a NOAA Buoy."""
-    FMT_URI="https://www.ndbc.noaa.gov/data/realtime2/%s.txt"
+
+    FMT_URI = "https://www.ndbc.noaa.gov/data/realtime2/%s.txt"
 
     def __init__(self, name, station_id, timezone, unit_system):
         """Initialize the sensor."""
@@ -345,8 +366,14 @@ class NOAABuoySensor(Entity):
         if self.data is None:
             return self.attr
 
-        data_time = datetime(self.data["YY"][1], self.data["MM"][1], self.data["DD"][1],
-                hour=self.data["hh"][1], minute=self.data["mm"][1], tzinfo=tz.utc)
+        data_time = datetime(
+            self.data["YY"][1],
+            self.data["MM"][1],
+            self.data["DD"][1],
+            hour=self.data["hh"][1],
+            minute=self.data["mm"][1],
+            tzinfo=tz.utc,
+        )
         for k in self.data:
             if k in ("YY", "MM", "DD", "hh", "mm"):
                 continue
@@ -357,7 +384,11 @@ class NOAABuoySensor(Entity):
             if self._timezone == "gmt":
                 self.attr[k + "_time"] = data_time.strftime("%Y-%m-%dT%H:%M")
             else:
-                self.attr[k + "_time"] = data_time.replace(tzinfo=tz.utc).astimezone(tz=None).strftime("%Y-%m-%dT%H:%M")
+                self.attr[k + "_time"] = (
+                    data_time.replace(tzinfo=tz.utc)
+                    .astimezone(tz=None)
+                    .strftime("%Y-%m-%dT%H:%M")
+                )
 
             if self._unit_system == "english" and self.data[k][0] == "degC":
                 self.attr[k + "_unit"] = "degF"
@@ -385,22 +416,28 @@ class NOAABuoySensor(Entity):
         _LOGGER.debug("Querying the buoy database")
         r = requests.get(self._station_url)
         if r.status_code is not requests.codes.ok:
-            _LOGGER.error(f"Received HTTP code {r.status_code} from {self._station_url} query")
+            _LOGGER.error(
+                f"Received HTTP code {r.status_code} from {self._station_url} query"
+            )
             return
         # r.text is new-line separated with #-prefixed headers for data type and unit.
         # since temperature is always celsius, if unit_system is english, convert.
 
         lines = r.text.splitlines()
         if len(lines) < 3:
-            _LOGGER.error(f"Received fewer than 3 lines of data, which shouldn't happen: {r.text}")
+            _LOGGER.error(
+                f"Received fewer than 3 lines of data, which shouldn't happen: {r.text}"
+            )
 
         if self.data == None:
             self.data = {}
-        head = '\n    '.join(lines[0:3])
+        head = "\n    ".join(lines[0:3])
         _LOGGER.debug(f"Buoy data head:\n    {head}")
         fields = lines[0].strip("#").split()
         units = lines[1].strip("#").split()
-        values = lines[2].split() # latest values are at the top of the file, thankfully.
+        values = lines[
+            2
+        ].split()  # latest values are at the top of the file, thankfully.
         for i in range(len(fields)):
             if values[i] == "MM":
                 self.data[fields[i]] = (units[i], values[i])
