@@ -15,7 +15,7 @@ Make sure that [Home Assistant Community Store (HACS)](https://github.com/custom
 
 1. Clone the repository.
 2. Copy the `custom_components/noaa_tides` directory into `<home assistant directory>/custom_components/`
-3. Configure a sensor in configuration.yaml
+3. Configure a sensor in `configuration.yaml`
 
 ## Configuration
 
