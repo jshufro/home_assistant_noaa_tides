@@ -22,6 +22,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,7 +61,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     if CONF_UNIT_SYSTEM in config:
         unit_system = config[CONF_UNIT_SYSTEM]
-    elif hass.config.units.is_metric:
+    elif hass.config.units is METRIC_SYSTEM:
         unit_system = UNIT_SYSTEMS[1]
     else:
         unit_system = UNIT_SYSTEMS[0]
