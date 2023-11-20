@@ -1,5 +1,6 @@
 {
-  "name": "NOAA Tides and Currents",
-  "domains": ["sensor"],
-  "render_readme": true
+    "name": "NOAA Tides and Currents",
+    "domains": ["sensor"],
+    "render_readme": true,
+    "filename": "sensor.py"
 }
