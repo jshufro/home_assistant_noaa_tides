@@ -3,9 +3,6 @@ profile = "black"
 force_to_top = [ "logging" ]
 balanced_wrapping = true
 
-[black]
-line-length = 90
-
 [tool.pycln]
 all = true
 
