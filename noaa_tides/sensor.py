@@ -15,10 +15,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_TIME_ZONE,
     CONF_UNIT_SYSTEM,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_TIMESTAMP,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT
+    UnitOfTemperature,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -241,11 +238,11 @@ class NOAATemperatureSensor(NOAATidesAndCurrentsSensor):
 
     @property
     def device_class(self) -> Optional[str]:
-        return DEVICE_CLASS_TEMPERATURE
+        return SensorDeviceClass.TEMPERATURE
 
     @property
     def unit_of_measurement(self):
-        return TEMP_CELSIUS if self._unit_system == "metric" else TEMP_FAHRENHEIT
+        return UnitOfTemperature.CELSIUS if self._unit_system == "metric" else UnitOfTemperature.FAHRENHEIT
 
     def noaa_coops_update(self):
         if self._station is None:
@@ -327,11 +324,11 @@ class NOAABuoySensor(Entity):
 
     @property
     def device_class(self) -> Optional[str]:
-        return DEVICE_CLASS_TEMPERATURE
+        return SensorDeviceClass.TEMPERATURE
 
     @property
     def unit_of_measurement(self):
-        return TEMP_CELSIUS if self._unit_system == "metric" else TEMP_FAHRENHEIT
+        return UnitOfTemperature.CELSIUS if self._unit_system == "metric" else UnitOfTemperature.FAHRENHEIT
 
     @property
     def extra_state_attributes(self):
