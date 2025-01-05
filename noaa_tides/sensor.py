@@ -123,10 +123,11 @@ class NOAATidesAndCurrentsSensor(Entity):
         now = datetime.now()
         tide_text = None
         most_recent = None
+        next_tide = None
         for index, row in self.data.iterrows():
             if most_recent == None or (index <= now and index > most_recent):
                 most_recent = index
-            elif index > now:
+            elif index > now and next_tide == None:
                 self.attr["next_tide_time"] = index.strftime("%-I:%M %p")
                 self.attr["last_tide_time"] = most_recent.strftime("%-I:%M %p")
                 tide_factor = 0
@@ -135,11 +136,21 @@ class NOAATidesAndCurrentsSensor(Entity):
                     self.attr["next_tide_type"] = "High"
                     self.attr["last_tide_type"] = "Low"
                     self.attr["high_tide_level"] = row.predicted_wl
+                    self.attr["next_high_tide"] = index.strftime("%-I:%M %p")
                 elif row.hi_lo == "L":
                     self.attr["next_tide_type"] = "Low"
                     self.attr["last_tide_type"] = "High"
                     self.attr["low_tide_level"] = row.predicted_wl
+                    self.attr["next_low_tide"] = index.strftime("%-I:%M %p")
                 self.update_tide_factor_from_attr()
+                next_tide = index
+            elif index > next_tide:
+                if row.hi_lo == "H":
+                    self.attr["high_tide_level"] = row.predicted_wl
+                    self.attr["next_high_tide"] = index.strftime("%-I:%M %p")
+                elif row.hi_lo == "L":
+                    self.attr["low_tide_level"] = row.predicted_wl
+                    self.attr["next_low_tide"] = index.strftime("%-I:%M %p")
                 return self.attr
         return self.attr
 
